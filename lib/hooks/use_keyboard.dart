@@ -10,8 +10,10 @@ import 'package:iris/widgets/popups/track/subtitle_and_audio_track.dart';
 import 'package:iris/widgets/popups/settings/settings.dart';
 import 'package:iris/widgets/popups/storages/storages.dart';
 import 'package:iris/store/use_app_store.dart';
+import 'package:iris/store/use_history_store.dart';
 import 'package:iris/store/use_play_queue_store.dart';
 import 'package:iris/store/use_player_ui_store.dart';
+import 'package:iris/models/storages/storage.dart';
 import 'package:iris/utils/platform.dart';
 import 'package:iris/widgets/bottom_sheets/show_open_link_bottom_sheet.dart';
 import 'package:iris/widgets/dialogs/show_open_link_dialog.dart';
@@ -218,6 +220,39 @@ KeyboardEvent useKeyboard({
         case LogicalKeyboardKey.contextMenu:
           showControl();
           moreMenuKey.currentState?.showButtonMenu();
+          break;
+        // 删除当前文件
+        case LogicalKeyboardKey.delete:
+          showControl();
+          final playQueueState = usePlayQueueStore().state;
+          final currentPlayIndex = playQueueState.playQueue
+              .indexWhere((element) => element.index == playQueueState.currentIndex);
+          if (currentPlayIndex >= 0 && currentPlayIndex < playQueueState.playQueue.length) {
+            final currentItem = playQueueState.playQueue[currentPlayIndex];
+            final file = currentItem.file;
+            // 只处理本地文件（非 webdav/ftp，且不是 http/https 链接）
+            if (file.storageType != StorageType.webdav &&
+                file.storageType != StorageType.ftp &&
+                !file.uri.startsWith('http://') &&
+                !file.uri.startsWith('https://')) {
+              // 从播放队列移除（会自动切换到下一个）
+              await usePlayQueueStore().remove(currentItem);
+              // 删除历史记录
+              final historyProgress = useHistoryStore().findById(file.getID());
+              if (historyProgress != null) {
+                await useHistoryStore().remove(historyProgress);
+              }
+              // 删除物理文件
+              try {
+                final fileToDelete = File(file.uri);
+                if (await fileToDelete.exists()) {
+                  await fileToDelete.delete();
+                }
+              } catch (e) {
+                // 忽略删除错误
+              }
+            }
+          }
           break;
         default:
           break;
