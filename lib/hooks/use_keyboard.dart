@@ -191,10 +191,14 @@ KeyboardEvent useKeyboard({
             ),
           );
           break;
-        // 退出全屏
+        // 退出全屏 / 最小化
         case LogicalKeyboardKey.escape:
-          if (isDesktop && playerUiState.isFullScreen) {
-            usePlayerUiStore().updateFullScreen(false);
+          if (isDesktop) {
+            if (playerUiState.isFullScreen) {
+              usePlayerUiStore().updateFullScreen(false);
+            } else {
+              windowManager.minimize();
+            }
           }
           break;
         // 全屏
@@ -269,7 +273,7 @@ KeyboardEvent useKeyboard({
           } else {
             showProgress();
           }
-          player.backward(5);
+          player.backward(30);
           break;
         // 快进
         case LogicalKeyboardKey.arrowRight:
@@ -278,7 +282,7 @@ KeyboardEvent useKeyboard({
           } else {
             showProgress();
           }
-          player.forward(5);
+          player.forward(30);
           break;
         // 提升音量
         case LogicalKeyboardKey.arrowUp:

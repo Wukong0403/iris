@@ -70,28 +70,22 @@ void useResizeWindow() {
         }
 
         Size newSize;
-        final bool isPreviousPortrait = (prevAspectRatio ?? 1.0) < 1.0;
-        final bool isCurrentLandscape = aspectRatio >= 1.0;
-
-        if (isPreviousPortrait && isCurrentLandscape) {
-          logger('Resize rule: Portrait to Landscape (Height-based)');
+        // 横屏视频保持高度不变，竖屏视频保持宽度不变
+        logger('Resize rule: Keep dimension, adjust aspect ratio');
+        if (aspectRatio >= 1.0) {
+          // 横屏视频：保持高度不变，调整宽度
           double newHeight = oldBounds.height;
           double newWidth = newHeight * aspectRatio;
           newSize = Size(newWidth, newHeight);
         } else {
-          logger('Resize rule: Standard (Normalized Area-based)');
-          double currentArea = oldBounds.width * oldBounds.height;
-          const double standardAspectRatio = 16.0 / 9.0;
-          double normalizedHeight =
-              math.sqrt(currentArea / standardAspectRatio);
-
-          double newHeight = normalizedHeight;
-          double newWidth = newHeight * aspectRatio;
+          // 竖屏视频：保持宽度不变，调整高度
+          double newWidth = oldBounds.width;
+          double newHeight = newWidth / aspectRatio;
           newSize = Size(newWidth, newHeight);
         }
 
-        double maxWidth = screen.frame.width / screen.scaleFactor * 0.95;
-        double maxHeight = screen.frame.height / screen.scaleFactor * 0.95;
+        double maxWidth = screen.frame.width / screen.scaleFactor * 0.85;
+        double maxHeight = screen.frame.height / screen.scaleFactor * 0.85;
 
         if (newSize.width > maxWidth) {
           newSize = Size(maxWidth, maxWidth / aspectRatio);
@@ -100,10 +94,8 @@ void useResizeWindow() {
           newSize = Size(maxHeight * aspectRatio, maxHeight);
         }
 
-        final newPosition = Offset(
-          oldBounds.left + (oldBounds.width - newSize.width) / 2,
-          oldBounds.top + (oldBounds.height - newSize.height) / 2,
-        );
+        // 保持窗口左上角位置不变
+        final newPosition = Offset(oldBounds.left, oldBounds.top);
 
         await _applyResize(Rect.fromLTWH(
             newPosition.dx, newPosition.dy, newSize.width, newSize.height));

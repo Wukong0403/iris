@@ -46,7 +46,7 @@ abstract class AppState with _$AppState {
     @Default('none') String preferedSubtitleLanguage,
     @Default('system') String language,
     @Default(false) bool autoCheckUpdate,
-    @Default(false) bool autoResize,
+    @Default(true) bool autoResize,
     @Default(false) bool alwaysPlayFromBeginning,
     @Default(PlayerBackend.mediaKit) PlayerBackend playerBackend,
     @Default(SortBy.name) SortBy sortBy,
